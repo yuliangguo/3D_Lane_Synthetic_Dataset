@@ -1,8 +1,4 @@
 # Directories
-data
-Saved
 .*
-!/.gitignore
 # temporary files
 *~
-*.pyc
