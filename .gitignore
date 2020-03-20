@@ -1,4 +1,6 @@
 # Directories
 .*
+!/.gitattributes
 # temporary files
 *~
+*.jpg

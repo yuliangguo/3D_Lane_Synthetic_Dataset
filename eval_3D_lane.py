@@ -1,3 +1,20 @@
+"""
+Author: Yuliang Guo (yuliang_guo@alumni.brown.edu)
+
+Reference: "Gen-LaneNet: Generalized and Scalable Approach for 3D Lane Detection". Y. Guo. etal. 2020
+
+Description: This code is to evaluate 3D lane detection. The optimal matching between ground-truth set and predicted
+set of lanes are sought via solving a min cost flow.
+
+Evaluation metrics includes:
+    Average Precision (AP)
+    Max F-scores
+    x error close (0 - 40 m)
+    x error far (0 - 100 m)
+    z error close (0 - 40 m)
+    z error far (0 - 100 m)
+"""
+
 import numpy as np
 import cv2
 import os
@@ -7,10 +24,7 @@ import math
 import ujson as json
 from scipy.interpolate import interp1d
 import matplotlib
-from utils.utils import define_args, \
-    projective_transformation, \
-    projection_g2im, homography_crop_resize, \
-    sim3d_config, resample_laneline_in_y, prune_3d_lane_by_range, prune_3d_lane_by_visibility
+from utils.utils import *
 from utils.MinCostFlow import SolveMinCostFlow
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -26,8 +40,8 @@ color = [[0, 0, 255],  # red
          [255, 0, 255],  # purple
          [255, 255, 0]]  # cyan
 
-min_y = 5
-max_y = 80
+vis_min_y = 5
+vis_max_y = 80
 
 
 class LaneEval(object):
@@ -41,7 +55,9 @@ class LaneEval(object):
 
         self.x_min = args.top_view_region[0, 0]
         self.x_max = args.top_view_region[1, 0]
-        self.y_samples = np.linspace(args.anchor_y_steps[0], args.anchor_y_steps[-1], num=100, endpoint=False)
+        self.y_min = args.top_view_region[2, 1]
+        self.y_max = args.top_view_region[0, 1]
+        self.y_samples = np.linspace(self.y_min, self.y_max, num=100, endpoint=False)
         # self.y_samples = np.linspace(min_y, max_y, num=100, endpoint=False)
         self.dist_th = 1.5
         self.ratio_th = 0.75
@@ -66,7 +82,8 @@ class LaneEval(object):
         :return:
         """
 
-        close_range_idx = np.int((self.close_range - 1) / 0.8)
+        # change this properly
+        close_range_idx = np.where(self.y_samples > self.close_range)[0][0]
 
         r_lane, p_lane = 0., 0.
         x_error_close = []
@@ -253,7 +270,7 @@ class LaneEval(object):
     def bench_one_submit(self, pred_file, gt_file, prob_th=0.5, vis=False):
         if vis:
             save_path = pred_file[:pred_file.rfind('/')]
-            save_path += '/example/eval_vis'
+            save_path += '/vis'
             if vis and not os.path.exists(save_path):
                 try:
                     os.makedirs(save_path)
@@ -368,7 +385,7 @@ class LaneEval(object):
                 left, right = ax2.get_xlim()
                 ax2.set_zlim(min(bottom, -0.1), max(top, 0.1))
                 ax2.set_xlim(left, right)
-                ax2.set_ylim(min_y, max_y)
+                ax2.set_ylim(vis_min_y, vis_max_y)
                 ax2.locator_params(nbins=5, axis='x')
                 ax2.locator_params(nbins=5, axis='z')
                 ax2.tick_params(pad=18)
@@ -382,7 +399,7 @@ class LaneEval(object):
                 left, right = ax4.get_xlim()
                 ax4.set_zlim(min(bottom, -0.1), max(top, 0.1))
                 ax4.set_xlim(left, right)
-                ax4.set_ylim(min_y, max_y)
+                ax4.set_ylim(vis_min_y, vis_max_y)
                 ax4.locator_params(nbins=5, axis='x')
                 ax4.locator_params(nbins=5, axis='z')
                 ax4.tick_params(pad=18)
@@ -456,10 +473,6 @@ class LaneEval(object):
         :return:
         """
 
-        # if raw_file == 'images/05/0000347.jpg':
-        #     print('here')
-
-        close_range_idx = np.int((self.close_range - 1) / 0.8)
         r_lane, p_lane = 0., 0.
 
         # only keep the visible portion
@@ -550,7 +563,7 @@ class LaneEval(object):
         return r_lane, p_lane, cnt_gt, cnt_pred
 
     # evaluate two dataset at varying lane probability threshold to calculate AP
-    def bench_one_submit_varying_probs(self, pred_file, gt_file, eval_out_file, eval_fig_file):
+    def bench_one_submit_varying_probs(self, pred_file, gt_file, eval_out_file=None, eval_fig_file=None):
         varying_th = np.linspace(0.05, 0.95, 19)
         # try:
         pred_lines = open(pred_file).readlines()
@@ -676,8 +689,8 @@ class LaneEval(object):
         laneline_R = output_stats[1]
         laneline_P = output_stats[2]
         centerline_F = output_stats[3]
-        centerline_F_max = np.max(centerline_F)
-        centerline_max_i = np.argmax(centerline_F)
+        centerline_F_max = centerline_F[laneline_max_i]
+        centerline_max_i = laneline_max_i
         centerline_R = output_stats[4]
         centerline_P = output_stats[5]
 
@@ -687,75 +700,71 @@ class LaneEval(object):
         centerline_P = np.array([0.] + centerline_P.tolist() + [1.])
         f_laneline = interp1d(laneline_R, laneline_P)
         f_centerline = interp1d(centerline_R, centerline_P)
-        r_range_1 = np.linspace(0.05, 0.95, 19)
-        r_range_2 = np.linspace(0.7, 0.95, 10)
-        laneline_AP1 = np.mean(f_laneline(r_range_1))
-        laneline_AP2 = np.mean(f_laneline(r_range_2))
-        centerline_AP1 = np.mean(f_centerline(r_range_1))
-        centerline_AP2 = np.mean(f_centerline(r_range_2))
+        r_range = np.linspace(0.05, 0.95, 19)
+        laneline_AP = np.mean(f_laneline(r_range))
+        centerline_AP = np.mean(f_centerline(r_range))
 
-        # plot PR curve
-        fig = plt.figure()
-        ax1 = fig.add_subplot(121)
-        ax2 = fig.add_subplot(122)
-        ax1.plot(laneline_R, laneline_P, '-s')
-        ax2.plot(centerline_R, centerline_P, '-s')
+        if eval_fig_file is not None:
+            # plot PR curve
+            fig = plt.figure()
+            ax1 = fig.add_subplot(121)
+            ax2 = fig.add_subplot(122)
+            ax1.plot(laneline_R, laneline_P, '-s')
+            ax2.plot(centerline_R, centerline_P, '-s')
 
-        ax1.set_xlim(0, 1)
-        ax1.set_ylim(0, 1)
-        ax1.set_title('Lane Line')
-        ax1.set_xlabel('Recall')
-        ax1.set_ylabel('Precision')
-        ax1.set_aspect('equal')
-        ax1.legend('Max F-measure {:.3}'.format(laneline_F_max))
+            ax1.set_xlim(0, 1)
+            ax1.set_ylim(0, 1)
+            ax1.set_title('Lane Line')
+            ax1.set_xlabel('Recall')
+            ax1.set_ylabel('Precision')
+            ax1.set_aspect('equal')
+            ax1.legend('Max F-measure {:.3}'.format(laneline_F_max))
 
-        ax2.set_xlim(0, 1)
-        ax2.set_ylim(0, 1)
-        ax2.set_title('Center Line')
-        ax2.set_xlabel('Recall')
-        ax2.set_ylabel('Precision')
-        ax2.set_aspect('equal')
-        ax2.legend('Max F-measure {:.3}'.format(centerline_F_max))
+            ax2.set_xlim(0, 1)
+            ax2.set_ylim(0, 1)
+            ax2.set_title('Center Line')
+            ax2.set_xlabel('Recall')
+            ax2.set_ylabel('Precision')
+            ax2.set_aspect('equal')
+            ax2.legend('Max F-measure {:.3}'.format(centerline_F_max))
 
-        # fig.subplots_adjust(wspace=0.1, hspace=0.01)
-        fig.savefig(eval_fig_file)
-        plt.close(fig)
+            # fig.subplots_adjust(wspace=0.1, hspace=0.01)
+            fig.savefig(eval_fig_file)
+            plt.close(fig)
 
         print("===> Evaluation on validation set: \n"
               "laneline max F-measure {:.3} at Recall {:.3}, Precision {:.3} \n"
-              "laneline AP in recall range (0, 1): {:.3}\n"
-              "laneline AP in recall range (0.7, 1): {:.3} \n"
+              "laneline AP: {:.3}\n"
               "centerline max F-measure {:.3} at Recall {:.3}, Precision {:.3} \n"
-              "centerline AP in recall range (0, 1): {:.3} \n"
-              "centerline AP in recall range (0.7, 1): {:.3} \n".format(laneline_F_max,
-                                                                        laneline_R[laneline_max_i + 1],
-                                                                        laneline_P[laneline_max_i + 1],
-                                                                        laneline_AP1,
-                                                                        laneline_AP2,
-                                                                        centerline_F_max,
-                                                                        centerline_R[centerline_max_i + 1],
-                                                                        centerline_P[centerline_max_i + 1],
-                                                                        centerline_AP1,
-                                                                        centerline_AP2))
+              "centerline AP: {:.3} \n".format(laneline_F_max,
+                                               laneline_R[laneline_max_i + 1],
+                                               laneline_P[laneline_max_i + 1],
+                                               laneline_AP,
+                                               centerline_F_max,
+                                               centerline_R[centerline_max_i + 1],
+                                               centerline_P[centerline_max_i + 1],
+                                               centerline_AP))
 
         json_out = {}
         json_out['laneline_R'] = laneline_R[1:-1].astype(np.float32).tolist()
         json_out['laneline_P'] = laneline_P[1:-1].astype(np.float32).tolist()
         json_out['laneline_F_max'] = laneline_F_max
         json_out['laneline_max_i'] = laneline_max_i.tolist()
-        json_out['laneline_AP1'] = laneline_AP1
-        json_out['laneline_AP2'] = laneline_AP2
+        json_out['laneline_AP'] = laneline_AP
 
         json_out['centerline_R'] = centerline_R[1:-1].astype(np.float32).tolist()
         json_out['centerline_P'] = centerline_P[1:-1].astype(np.float32).tolist()
         json_out['centerline_F_max'] = centerline_F_max
         json_out['centerline_max_i'] = centerline_max_i.tolist()
-        json_out['centerline_AP1'] = centerline_AP1
-        json_out['centerline_AP2'] = centerline_AP2
-        with open(eval_out_file, 'w') as jsonFile:
-            jsonFile.write(json.dumps(json_out))
-            jsonFile.write('\n')
-            jsonFile.close()
+        json_out['centerline_AP'] = centerline_AP
+
+        json_out['max_F_prob_th'] = varying_th[laneline_max_i]
+
+        if eval_out_file is not None:
+            with open(eval_out_file, 'w') as jsonFile:
+                jsonFile.write(json.dumps(json_out))
+                jsonFile.write('\n')
+                jsonFile.close()
         return json_out
 
 
@@ -765,10 +774,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # two method are compared: '3D_LaneNet' and 'Gen_LaneNet'
-    method_name = '3D_LaneNet'
+    method_name = 'Gen_LaneNet'
 
     # Three different splits of datasets: 'standard', 'rare_subsit', 'illus_chg'
-    data_split = 'standard'
+    data_split = 'illus_chg'
 
     # location where the original dataset is saved. Image will be loaded in case of visualization
     args.dataset_dir = '/media/yuliangguo/DATA1/Datasets/Apollo_Sim_3D_Lane_Release/'
@@ -780,44 +789,23 @@ if __name__ == '__main__':
     gt_file = 'data_splits/' + data_split + '/test.json'
     pred_folder = 'data_splits/' + data_split + '/' + method_name
     pred_file = pred_folder + '/test_pred_file.json'
-    eval_out_file = pred_folder + '/test_eval.json'
-    eval_fig_file = pred_folder + '/test_pr.jpg'
 
     # Initialize evaluator
     evaluator = LaneEval(args)
 
     # evaluation at varying thresholds
-    eval_stats_pr = evaluator.bench_one_submit_varying_probs(pred_file, gt_file, eval_out_file, eval_fig_file)
+    eval_stats_pr = evaluator.bench_one_submit_varying_probs(pred_file, gt_file)
+    max_f_prob = eval_stats_pr['max_F_prob_th']
 
-    # evaluate at the point with max F-measure
-    eval_stats = evaluator.bench_one_submit(pred_file, gt_file, prob_th=0.5, vis=vis)
-
-    # print("===> Evaluation on validation set: \n"
-    #       "laneline F-measure {:.3} \n"
-    #       "laneline Recall  {:.3} \n"
-    #       "laneline Precision  {:.3} \n"
-    #       "laneline x error (close)  {:.3} m\n"
-    #       "laneline x error (far)  {:.3} m\n"
-    #       "laneline z error (close)  {:.3} m\n"
-    #       "laneline z error (far)  {:.3} m\n\n"
-    #       "centerline F-measure {:.3} \n"
-    #       "centerline Recall  {:.3} \n"
-    #       "centerline Precision  {:.3} \n"
-    #       "centerline x error (close)  {:.3} m\n"
-    #       "centerline x error (far)  {:.3} m\n"
-    #       "centerline z error (close)  {:.3} m\n"
-    #       "centerline z error (far)  {:.3} m\n".format(eval_stats[0], eval_stats[1],
-    #                                                    eval_stats[2], eval_stats[3],
-    #                                                    eval_stats[4], eval_stats[5],
-    #                                                    eval_stats[6], eval_stats[7],
-    #                                                    eval_stats[8], eval_stats[9],
-    #                                                    eval_stats[10], eval_stats[11],
-    #                                                    eval_stats[12], eval_stats[13]))
+    # evaluate at the point with max F-measure. Additional eval of position error. Option to visualize matching result
+    eval_stats = evaluator.bench_one_submit(pred_file, gt_file, prob_th=max_f_prob, vis=vis)
 
     print("Metrics: AP, F-score, x error (close), x error (far), z error (close), z error (far)")
     print(
-        "Laneline: {:.3}  {:.3}  {:.3}  {:.3}  {:.3}".format(eval_stats[0], eval_stats[3], eval_stats[4], eval_stats[5],
-                                                             eval_stats[6]))
-    print("Centerline: {:.3}  {:.3}  {:.3}  {:.3}  {:.3}".format(eval_stats[7], eval_stats[10], eval_stats[11],
-                                                                 eval_stats[12], eval_stats[13]))
+        "Laneline:  {:.3}  {:.3}  {:.3}  {:.3}  {:.3}  {:.3}".format(eval_stats_pr['laneline_AP'], eval_stats[0],
+                                                                     eval_stats[3], eval_stats[4],
+                                                                     eval_stats[5], eval_stats[6]))
+    print("Centerline:  {:.3}  {:.3}  {:.3}  {:.3}  {:.3}  {:.3}".format(eval_stats_pr['centerline_AP'], eval_stats[7],
+                                                                         eval_stats[10], eval_stats[11],
+                                                                         eval_stats[12], eval_stats[13]))
 

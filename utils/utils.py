@@ -3,30 +3,14 @@
 import argparse
 import errno
 import os
-import sys
-
 import cv2
-import matplotlib
 import numpy as np
-import torch
-import torch.nn.init as init
-import torch.optim
-from PIL import Image
-from torch.optim import lr_scheduler
-import os.path as ops
-from mpl_toolkits.mplot3d import Axes3D
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
-from scipy.optimize import fsolve
-plt.rcParams['figure.figsize'] = (35, 30)
 
 
 def define_args():
     parser = argparse.ArgumentParser(description='3D lane evaluation')
     # Paths settings
-    # parser.add_argument('--dataset_name', type=str, help='the dataset name to be used in saving model names')
-    # parser.add_argument('--data_dir', type=str, help='The path saving train.json and val.json files')
     parser.add_argument('--dataset_dir', type=str, help='The path saving actual data')
     # Dataset settings
     parser.add_argument('--org_h', type=int, default=720, help='height of the original image')
@@ -60,7 +44,7 @@ def sim3d_config(args):
                        [0., 0., 1.]])
 
     # specify model settings
-    args.top_view_region = np.array([[-10, 100], [10, 100], [-10, 0], [10, 0]])
+    args.top_view_region = np.array([[-10, 103], [10, 103], [-10, 3], [10, 3]])
 
     # initialize with pre-trained vgg weights: paper suggested true
     args.pretrained = False
