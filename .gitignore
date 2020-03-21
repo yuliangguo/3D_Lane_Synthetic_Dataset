@@ -1,6 +1,5 @@
 # Directories
-.*
 !/.gitattributes
 # temporary files
 *~
-*.jpg
+*.idea
