@@ -16,6 +16,7 @@ The detailed strategy of the construction and evaluation method refer to our pap
 </p>
 
 
+
 ## Requirements
 
 * python                    3.7.3
@@ -25,10 +26,13 @@ The detailed strategy of the construction and evaluation method refer to our pap
 * opencv-python             4.1.0.25
 * py3-ortools               5.1.4041
 
+
+
 ## Data preparation
 
 
 You are wellcome to proceed to the development and evaluation directly using the splits of training and testing sets we provide.
+Feel free to skip this section if you use our data split directly.
 
     ```
     data_splits
@@ -55,19 +59,25 @@ You are wellcome to proceed to the development and evaluation directly using the
     │   └── test.json
     ```
 
-Meanwhile, we provide the helper functions needed to build your own split from the raw datasets downloaded.
+Meanwhile, we provide the helper functions needed to build your own split from the raw datasets downloaded. The following codes 
+need to be right in order.
 
     parse_apollo_sim_raw_data.py
 
-It ...
+This code extracts lane-lanes and center-lanes in a interested top-view area. The code reasons about the foreground and background
+occlusion based on the provided ground-truth depth maps and semantic segmentation map. Those lane segments in the distance occluded
+by background are discarded, because in general they are not expected to recover from a lane detection method.
 
     prepare_data_split.py
 
-It ...
+This code randomly split the whole data into training and testing sets following a 'standard' five-fold split. Specifically, 
+a subset generated from a difficult urban map are further extracted to be the test set for 'rare subset' data split.
 
     prepare_data_subset
  
-it ...   
+Given the standard split of data, this code exclude images corresponding to a certain 'illumination' condition (before dawn)
+from the training set. On contrary, in the testing set, only images corresponding to that illumination condition are kept.
+
 
 
 ## Evaluation
@@ -87,6 +97,8 @@ Precision and recall are computed via varying lane confidence threshold. Overall
  * x-error in far range (40-100 m)
  * z-error in close range (0-40 m)
  * z-error in far range (40-100 m)
+
+
 
 ## Baselines Results
 
@@ -117,6 +129,7 @@ The results from the code is slightly different from reported in the paper due t
 |------------------------|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|
 | 3D-LaneNet             |   74.9    | 72.5      | 0.115     | 0.601     | 0.032     | 0.230
 | Gen-LaneNet            |   87.2    | 85.3      | 0.074     | 0.538     | 0.015     | 0.232
+
 
 
 ## Visualization

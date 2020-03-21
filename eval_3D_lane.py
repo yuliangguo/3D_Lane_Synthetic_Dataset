@@ -780,7 +780,7 @@ if __name__ == '__main__':
     data_split = 'illus_chg'
 
     # location where the original dataset is saved. Image will be loaded in case of visualization
-    args.dataset_dir = '/media/yuliangguo/DATA1/Datasets/Apollo_Sim_3D_Lane_Release/'
+    args.dataset_dir = '~/Datasets/Apollo_Sim_3D_Lane_Release/'
 
     # load configuration for certain dataset
     sim3d_config(args)
