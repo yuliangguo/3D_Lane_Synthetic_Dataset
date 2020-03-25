@@ -5,7 +5,7 @@
 This is a synthetic dataset constructed to stimulate the development and evaluation of 3D lane detection methods 
 (download from [here](https://drive.google.com/open?id=1Kisxoj7mYl1YyA_4xBKTE8GGWiNZVain)). 
 This dataset is an extension to [Apollo Synthetic Dataset](http://apollo.auto/synthetic.html).
-The detailed strategy of the construction and evaluation method refers to our paper:
+The detailed strategy of the construction and evaluation method refer to our paper:
 
 "Gen-LaneNet: a generalized and scalable approach for 3D lane detection", Y. Guo, etal., Arxiv, 2020 [[paper](https://arxiv.org/abs/2003.10656)]
 
