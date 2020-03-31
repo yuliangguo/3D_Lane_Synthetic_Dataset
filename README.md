@@ -152,3 +152,15 @@ We show two examples for each method under the data split involving illumination
 * Gen-LaneNet
 
 <img src="figs/Gen_LaneNet/images_00_0000148.jpg" width="400"> <img src="figs/Gen_LaneNet/images_00_0000171.jpg" width="400">
+
+
+## Citation
+Please cite the paper in your publications if it helps your research: 
+
+    @article{guo2020gen,
+      title={Gen-LaneNet: A Generalized and Scalable Approach for 3D Lane Detection},
+      author={Guo, Yuliang and Chen, Guang and Zhao, Peitao and Zhang, Weide and Miao, Jinghao and Wang, Jingao and Choe, Tae Eun},
+      journal={arXiv},
+      pages={arXiv--2003},
+      year={2020}
+    }
