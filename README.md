@@ -159,7 +159,7 @@ Please cite the paper in your publications if it helps your research:
 
     @article{guo2020gen,
       title={Gen-LaneNet: A Generalized and Scalable Approach for 3D Lane Detection},
-      author={Guo, Yuliang and Chen, Guang and Zhao, Peitao and Zhang, Weide and Miao, Jinghao and Wang, Jingao and Choe, Tae Eun},
+      author={Yuliang Guo, Guang Chen, Peitao Zhao, Weide Zhang, Jinghao Miao, Jingao Wang, and Tae Eun Choe},
       journal={arXiv},
       pages={arXiv--2003},
       year={2020}
