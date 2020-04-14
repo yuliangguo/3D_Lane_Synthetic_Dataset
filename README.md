@@ -7,7 +7,7 @@ This is a synthetic dataset constructed to stimulate the development and evaluat
 This dataset is an extension to [Apollo Synthetic Dataset](http://apollo.auto/synthetic.html).
 The detailed strategy of construction and the evaluation method refer to our paper:
 
-"Gen-LaneNet: a generalized and scalable approach for 3D lane detection", Y. Guo, etal., Arxiv, 2020 [[paper](https://arxiv.org/abs/2003.10656)]
+"Gen-LaneNet: a generalized and scalable approach for 3D lane detection", Y. Guo, etal., Arxiv, 2020 [[paper](https://arxiv.org/abs/2003.10656)] [[code](https://github.com/yuliangguo/Pytorch_Generalized_3D_Lane_Detection)]
 
 <p align="center">
   <img src="figs/00_0000045.jpg" width="280" />
