@@ -3,7 +3,7 @@
 ## Introduction
 
 This is a synthetic dataset constructed to stimulate the development and evaluation of 3D lane detection methods 
-(download from [here](https://drive.google.com/open?id=1Kisxoj7mYl1YyA_4xBKTE8GGWiNZVain)). 
+(download dataset from [[google drive](https://drive.google.com/open?id=1Kisxoj7mYl1YyA_4xBKTE8GGWiNZVain)] [[baidu netdisk](https://pan.baidu.com/s/1y_d73-SaNreesif5nVXIVg?pwd=a852)]). 
 This dataset is an extension to [Apollo Synthetic Dataset](http://apollo.auto/synthetic.html).
 The detailed strategy of construction and the evaluation method refer to our ECCV 2020 paper:
 
