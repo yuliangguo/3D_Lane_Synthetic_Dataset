@@ -3,3 +3,4 @@
 # temporary files
 *~
 *.idea
+*.DS_Store

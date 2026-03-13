@@ -2,12 +2,16 @@
 
 ## Introduction
 
-This is a synthetic dataset constructed to stimulate the development and evaluation of 3D lane detection methods 
-(download dataset from [[google drive](https://drive.google.com/open?id=1Kisxoj7mYl1YyA_4xBKTE8GGWiNZVain)] [[baidu netdisk](https://pan.baidu.com/s/1y_d73-SaNreesif5nVXIVg?pwd=a852)]). 
-This dataset is an extension to [Apollo Synthetic Dataset](http://apollo.auto/synthetic.html).
+This is a synthetic dataset constructed to stimulate the development and evaluation of 3D lane detection methods.
+
+This dataset is an extension to [Apollo Synthetic Dataset](http://apollo.auto/synthetic.html). Both the `raw dataset` and the `data split` can be downloaded from [[huggingface](yuliangguo/3D_Lane_Synthetic_Dataset)].
+The raw dataset can also be downloaded from [[google drive](https://drive.google.com/open?id=1Kisxoj7mYl1YyA_4xBKTE8GGWiNZVain)] [[baidu netdisk](https://pan.baidu.com/s/1y_d73-SaNreesif5nVXIVg?pwd=a852)]. 
+
+
 The detailed strategy of construction and the evaluation method refer to our ECCV 2020 paper:
 
 "Gen-LaneNet: a generalized and scalable approach for 3D lane detection", Y. Guo, etal., ECCV, 2020 [[eccv](https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123660664.pdf)][[arxiv](https://arxiv.org/abs/2003.10656)] [[code](https://github.com/yuliangguo/Pytorch_Generalized_3D_Lane_Detection)]
+
 
 <p align="center">
   <img src="figs/00_0000045.jpg" width="280" />
@@ -32,7 +36,7 @@ The detailed strategy of construction and the evaluation method refer to our ECC
 
 
 You are welcome to proceed to the development and evaluation directly using the splits of the training and testing sets we provide.
-Feel free to skip this section if you use our data split directly.
+Feel free to skip this section if you use our data split directly (downloadable from [[huggingface](yuliangguo/3D_Lane_Synthetic_Dataset)]).
 
     ```
     data_splits
